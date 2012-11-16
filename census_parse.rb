@@ -149,15 +149,11 @@ def preprocess_tables(work_dir, dataset)
     fo = work_dir + "/us000%02d" %  i + "2010.cs1"
     fcsv = File.open(work_dir + "/us000%02d" %  i + "2010.csv","w")
     fi = work_dir + "/us000%02d" %  i + "2010.#{dataset}"    
+
+    next if File.size?(fi)
     puts "Filtering file #{fi}"
 
-    awk_str = "/usr/bin/awk \'/#{rec_min}/, /#{rec_max}/\' #{fi} > #{fo}"
-    begin
-      system(awk_str)
-    rescue
-      raise "Awk failed"
-    end
-
+    `/usr/bin/awk \'/#{rec_min}/, /#{rec_max}/\' #{fi} > #{fo}`
     #
     # Filter for exact LOGRECNO match only
     #
@@ -294,7 +290,7 @@ RESERVED = SUBSTR(@var,483 , 18 );
 
 
   sql_str = "#{MYSQLBIN_D}/mysql -h #{SQLHOST} -u #{SQLUSER} --password=#{SQLPASSWORD} -D #{SQLDATABASE} --execute=#{qstr}"
-  puts "   Trying mysql with #{sql_str}"
+  # puts "Trying mysql with #{sql_str}"
   
   begin
     system(sql_str)
@@ -333,18 +329,25 @@ end
 #}
 #
 # ---------------------------------------------------------------------------------------------------------
-def print_json_headers(result,column)  
-  table = column[0, column.length - 3]
-  table = table.gsub!(/([A-Za-z]+)0+([1-9]+)/, '\1\2')
+def json_headers(col_desc_h, key)
+  hz = {}
+  
+  table = key[0...-3].gsub(/([A-Za-z]+)0+([1-9]+)/, '\1\2')
 
-  column_desc =  "{"
-  column_desc <<  "\n \"table\": \"#{table}\", "
-  column_desc <<  "\n \"name\": \"#{result[ "#{table}" ] ["name"] }\","
-  column_desc <<  "\n \"universe\": \"#{result[ "#{table}" ] ["universe"] }\","
-  column_desc <<  "\n \"text\": \"#{result[ "#{table}" ] ["labels"] ["#{column}"] ["text"]}\""
-  column_desc << "\n}"
- 
-  column_desc
+  puts "table: #{table}"
+  puts "col_desc_h[table]: #{col_desc_h[table]}"
+  puts "key: #{key}"
+  
+  if col_desc_h[table]
+    hz[:table] = table
+    hz[:name] = col_desc_h[table]["name"]
+    hz[:universe] = col_desc_h[table]["universe"]
+    hz[:text] = col_desc_h[table]["labels"][key]["text"]
+    hz
+  else
+    puts "table not found: #{table}"
+    nil
+  end
 end
 
 # ---------------------------------------------------------------------------------------------------------
@@ -358,51 +361,50 @@ def query_census(client, chunk, rec_offset, file, col_desc_h)
   qstr1 = "SELECT  g.state, g.county, g.zcta5, "
   qstr2 = "FROM geo2010 g "
      
-  for x in 1..46   
-  #  next if x == 40 or x == 41                           # Empty segment at ZCTA level
+  1.upto(46) do |x|
+    #  next if x == 40 or x == 41                           # Empty segment at ZCTA level
     qstr1 += "s%02d.*, " % (x)
     qstr2 += "LEFT JOIN sf1_%02d " % (x) + "s%02d " % (x) + "on g.LOGRECNO = s%02d" % (x) + ".LOGRECNO  "
   end
+  
   qstr1 += " s47.* "
   qstr2 +=   "LEFT JOIN sf1_47 s47 on g.LOGRECNO = s47.LOGRECNO where g.SUMLEV = '880' ORDER BY g.LOGRECNO LIMIT #{chunk} OFFSET #{rec_offset} ;"
 
   qstring = qstr1 + qstr2
   puts qstring.inspect
 
-  begin
-    results = client.query(qstring)
-  rescue
-    puts "    query_census: query #{qstring} failed"
-  end
+  results = client.query(qstring)
 
-#
-# Each row is a hash with the keys as the fields 
-# Parse the array to skip the extra header fields present in all data files (FILEID, STUSAB, CHARITER, CIFSN)
-#                    keep the initial geographic header fields,     
-#
-# For first four fields (state,county, zcta,LOGRECNO) just print values
-# All other fields print two descriptor and value
-#  "P008030": {
-#     "descriptor": {...}  
-#     "value": VALUE 
-#  }
-#
-# 
+  #
+  # Each row is a hash with the keys as the fields 
+  # Parse the array to skip the extra header fields present in all data files (FILEID, STUSAB, CHARITER, CIFSN)
+  #                    keep the initial geographic header fields,     
+  #
+  # For first four fields (state,county, zcta,LOGRECNO) just print values
+  # All other fields print two descriptor and value
+  #  "P008030": {
+  #     "descriptor": {...}  
+  #     "value": VALUE 
+  #  }
+  #
+  # 
 
-  puts "    Writing JSON with records"
+  puts "Writing JSON with records"
   results.each(:as => hash, :cache_rows => false) do |row|
-    file.print "{"
+    h = {}
+    
     for (key, value) in row do
       next if key =~ /FILEID|STUSAB|CHARITER|CIFSN/      # Repeated for every table from wildcard select
+      
       if key =~ /state|county|zcta|LOGRECNO/
-         file.print "\"#{key}\":\"#{value}\", "
-      else
-        this_description = print_json_headers(col_desc_h,key) 
-
-        desc_line = "{\n\"descriptor\": #{this_description}" 
-        file.print "\"#{key}\":\"#{desc_line}\",\n"
-        file.print "\"value\": \"#{value}\"\n"
-        file.print "},\n"
+        h[key] = value
+        # file.print h.to_json
+      elsif d = json_headers(col_desc_h, key)
+        h[key] = { 
+          d: d,
+          value: value
+        }
+        file.print h.to_json + "\n"
       end
     end
   end
@@ -416,7 +418,7 @@ end
 #
 # ---------------------------------------------------------------------------------------------------------
 
-puts "downloading from #{uri1} - works"
+puts "downloading from #{uri1}"
 #download_zip(uri1, working_dir)                     # ftp and uncompress SF1 data
 
 begin
@@ -425,13 +427,13 @@ rescue
   raise "Could not connect to database #{SQLDATABASE}"
 end
 
-puts "Creating tables - works"
+puts "Creating tables"
 create_census_tables(SQLHOST,SQLUSER,SQLPASSWORD,SQLDATABASE,SQLSCRIPT_D)
 
-puts "Preprocessing files - works"
+puts "Preprocessing files"
 preprocess_tables(working_dir, "sf1")
 
-puts "Loading tables - works"
+puts "Loading tables"
 load_tables(client, working_dir, "cs1", "sf1")
 
 begin
@@ -440,37 +442,20 @@ rescue
   raise "Could not open #{col_desc_file}"
 end
 
-begin
-  json = File.read(col_desc_f)
-rescue
-  raise "Could not read file #{col_desc_file}"
-end
+raise "Could not read file #{col_desc_file}" unless File.size?(col_desc_f)
+json = File.read(col_desc_f)
 
-
-begin  
-  col_desc_hash = JSON.parse(json)
-rescue
-  raise "Could not parse JSON"
-end
+col_desc_hash = JSON.parse(json)
   
-puts "Querying database #{SQLDATABASE}"
+puts "Querying database"
 
 offset = 0
 max_offset = 44100 - SQLCHUNK
 
-begin
-  json_output_file =  File.open(File.join(working_dir, "census.json"), "w")
-rescue
-  raise "Error - could not write JSON output"
-end
-
+json_output_file =  File.open(File.join(working_dir, "census.json"), "w")
 
 while offset < max_offset do
   puts "Running query with LIMIT #{SQLCHUNK} offset #{offset} "
-  begin
-    query_census(client, SQLCHUNK, offset, json_output_file, col_desc_hash)
-  rescue
-    puts "query_census failed"
-  end
+  query_census(client, SQLCHUNK, offset, json_output_file, col_desc_hash)
   offset += SQLCHUNK
 end
