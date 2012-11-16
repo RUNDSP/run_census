@@ -1,0 +1,208 @@
+
+
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/usgeo2010.csv' INTO TABLE geo2010
+LINES terminated by "\n"
+(@var)
+SET FILEID = SUBSTR(@var,1 , 6 ),
+STUSAB = SUBSTR(@var,7 , 2 ),
+SUMLEV = SUBSTR(@var,9 , 3 ),
+GEOCOMP = SUBSTR(@var,12 , 2 ),
+CHARITER = SUBSTR(@var,14 , 3 ),
+CIFSN = SUBSTR(@var,17 , 2 ),
+LOGRECNO = SUBSTR(@var,19 , 7 ),
+REGION = SUBSTR(@var,26 , 1 ),
+DIVISION = SUBSTR(@var,27 , 1 ),
+STATE = SUBSTR(@var,28 , 2 ),
+COUNTY = SUBSTR(@var,30 , 3 ),
+COUNTYCC = SUBSTR(@var,33 , 2 ),
+COUNTYSC = SUBSTR(@var,35 , 2 ),
+COUSUB = SUBSTR(@var,37 , 5 ),
+COUSUBCC = SUBSTR(@var,42 , 2 ),
+COUSUBSC = SUBSTR(@var,44 , 2 ),
+PLACE = SUBSTR(@var,46 , 5 ),
+PLACECC = SUBSTR(@var,51 , 2 ),
+PLACESC = SUBSTR(@var,53 , 2 ),
+TRACT = SUBSTR(@var,55 , 6 ),
+BLKGRP = SUBSTR(@var,61 , 1 ),
+BLOCK = SUBSTR(@var,62 , 4 ),
+IUC = SUBSTR(@var,66 , 2 ),
+CONCIT = SUBSTR(@var,68 , 5 ),
+CONCITCC = SUBSTR(@var,73 , 2 ),
+CONCITSC = SUBSTR(@var,75 , 2 ),
+AIANHH = SUBSTR(@var,77 , 4 ),
+AIANHHFP = SUBSTR(@var,81 , 5 ),
+AIANHHCC = SUBSTR(@var,86 , 2 ),
+AIHHTLI = SUBSTR(@var,88 , 1 ),
+AITSCE = SUBSTR(@var,89 , 3 ),
+AITS = SUBSTR(@var,92 , 5 ),
+AITSCC = SUBSTR(@var,97 , 2 ),
+TTRACT = SUBSTR(@var,99 , 6 ),
+TBLKGRP = SUBSTR(@var,105 , 1 ),
+ANRC = SUBSTR(@var,106 , 5 ),
+ANRCCC = SUBSTR(@var,111 , 2 ),
+CBSA = SUBSTR(@var,113 , 5 ),
+CBSASC = SUBSTR(@var,118 , 2 ),
+METDIV = SUBSTR(@var,120 , 5 ),
+CSA = SUBSTR(@var,125 , 3 ),
+NECTA = SUBSTR(@var,128 , 5 ),
+NECTASC = SUBSTR(@var,133 , 2 ),
+NECTADIV = SUBSTR(@var,135 , 5 ),
+CNECTA = SUBSTR(@var,140 , 3 ),
+CBSAPCI = SUBSTR(@var,143 , 1 ),
+NECTAPCI = SUBSTR(@var,144 , 1 ),
+UA = SUBSTR(@var,145 , 5 ),
+UASC = SUBSTR(@var,150 , 2 ),
+UATYPE = SUBSTR(@var,152 , 1 ),
+UR = SUBSTR(@var,153 , 1 ),
+CD = SUBSTR(@var,154 , 2 ),
+SLDU = SUBSTR(@var,156 , 3 ),
+SLDL = SUBSTR(@var,159 , 3 ),
+VTD = SUBSTR(@var,162 , 6 ),
+VTDI = SUBSTR(@var,168 , 1 ),
+RESERVE2 = SUBSTR(@var,169 , 3 ),
+ZCTA5 = SUBSTR(@var,172 , 5 ),
+SUBMCD = SUBSTR(@var,177 , 5 ),
+SUBMCDCC = SUBSTR(@var,182 , 2 ),
+SDELM = SUBSTR(@var,184 , 5 ),
+SDSEC = SUBSTR(@var,189 , 5 ),
+SDUNI = SUBSTR(@var,194 , 5 ),
+AREALAND = SUBSTR(@var,199 , 14 ),
+AREAWATR = SUBSTR(@var,213 , 14 ),
+NAME = SUBSTR(@var,227 , 90 ),
+FUNCSTAT = SUBSTR(@var,318 , 1 ),
+GCUNI = SUBSTR(@var,319 , 1 ),
+POP100 = SUBSTR(@var,319 , 9 ),
+HU100 = SUBSTR(@var,328, 9 ),
+INTPTLAT = SUBSTR(@var,337 , 11 ),
+INTPTLON = SUBSTR(@var,348 , 12 ),
+LSADC = SUBSTR(@var,360 , 2 ),
+PARTFLAG = SUBSTR(@var,362 , 1 ),
+RESERVE3 = SUBSTR(@var,363 , 6 ),
+UGA = SUBSTR(@var,369 , 5 ),
+STATENS = SUBSTR(@var,374 , 8 ),
+COUNTYNS = SUBSTR(@var,381 , 8 ),
+COUSUBNS = SUBSTR(@var,390 , 8 ),
+PLACENS = SUBSTR(@var,398 , 8 ),
+CONCITNS = SUBSTR(@var,406 , 8 ),
+AIANHHNS = SUBSTR(@var,414 , 8 ),
+AITSNS = SUBSTR(@var,421 , 8 ),
+ANRCNS = SUBSTR(@var,430 , 8 ),
+SUBMCDNS = SUBSTR(@var,438 , 8 ),
+CD113 = SUBSTR(@var,446 , 2 ),
+CD114 = SUBSTR(@var,448 , 2 ),
+CD115 = SUBSTR(@var,450 , 2 ),
+SLDU2 = SUBSTR(@var,452 , 3 ),
+SLDU3 = SUBSTR(@var,455 , 3 ),
+SLDU4 = SUBSTR(@var,458 , 3 ),
+SLDL2 = SUBSTR(@var,461 , 3 ),
+SLDL3 = SUBSTR(@var,464 , 3 ),
+SLDL4 = SUBSTR(@var,467 , 3 ),
+AIANHHSC = SUBSTR(@var,470 , 2 ),
+CSASC = SUBSTR(@var,472 , 2 ),
+CNECTASC = SUBSTR(@var,474 , 2 ),
+MEMI = SUBSTR(@var,476 , 1 ),
+NMEMI = SUBSTR(@var,477 , 1 ),
+PUMA = SUBSTR(@var,478 , 5 ),
+RESERVED = SUBSTR(@var,483 , 18 );
+
+
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000012010.cs1' INTO TABLE sf1_01 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000022010.cs1' INTO TABLE sf1_02 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000032010.cs1' INTO TABLE sf1_03 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000042010.cs1' INTO TABLE sf1_04 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000052010.cs1' INTO TABLE sf1_05 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000062010.cs1' INTO TABLE sf1_06 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000072010.cs1' INTO TABLE sf1_07 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000082010.cs1' INTO TABLE sf1_08 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000092010.cs1' INTO TABLE sf1_09 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000102010.cs1' INTO TABLE sf1_10
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000112010.cs1' INTO TABLE sf1_11 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000122010.cs1' INTO TABLE sf1_12 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000132010.cs1' INTO TABLE sf1_13 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000142010.cs1' INTO TABLE sf1_14 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000152010.cs1' INTO TABLE sf1_15 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000162010.cs1' INTO TABLE sf1_16 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000172010.cs1' INTO TABLE sf1_17 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000182010.cs1' INTO TABLE sf1_18 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000192010.cs1' INTO TABLE sf1_19 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000202010.cs1' INTO TABLE sf1_20
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+
+
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000212010.cs1' INTO TABLE sf1_21 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000222010.cs1' INTO TABLE sf1_22 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000232010.cs1' INTO TABLE sf1_23 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000242010.cs1' INTO TABLE sf1_24 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000252010.cs1' INTO TABLE sf1_25 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000262010.cs1' INTO TABLE sf1_26 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000272010.cs1' INTO TABLE sf1_27 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000282010.cs1' INTO TABLE sf1_28 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000292010.cs1' INTO TABLE sf1_29 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000302010.cs1' INTO TABLE sf1_30
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000312010.cs1' INTO TABLE sf1_31 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000322010.cs1' INTO TABLE sf1_32 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000332010.cs1' INTO TABLE sf1_33 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000342010.cs1' INTO TABLE sf1_34 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000352010.cs1' INTO TABLE sf1_35 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000362010.cs1' INTO TABLE sf1_36 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000372010.cs1' INTO TABLE sf1_37 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000382010.cs1' INTO TABLE sf1_38 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000392010.cs1' INTO TABLE sf1_39 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000402010.cs1' INTO TABLE sf1_40
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000412010.cs1' INTO TABLE sf1_41 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000422010.cs1' INTO TABLE sf1_42 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000432010.cs1' INTO TABLE sf1_43 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000442010.cs1' INTO TABLE sf1_44 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000452010.cs1' INTO TABLE sf1_45 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000462010.cs1' INTO TABLE sf1_46 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+LOAD DATA INFILE '/Users/robert/Desktop/RunDSP/Census Project/SF1/Data/us000472010.cs1' INTO TABLE sf1_47 
+  FIELDS TERMINATED BY "," LINES TERMINATED BY "\n"; 
+
