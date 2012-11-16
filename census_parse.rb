@@ -288,15 +288,9 @@ PUMA = SUBSTR(@var,478 , 5 ),
 RESERVED = SUBSTR(@var,483 , 18 ); 
 \""
 
-
   sql_str = "#{MYSQLBIN_D}/mysql -h #{SQLHOST} -u #{SQLUSER} --password=#{SQLPASSWORD} -D #{SQLDATABASE} --execute=#{qstr}"
-  # puts "Trying mysql with #{sql_str}"
   
-  begin
-    system(sql_str)
-  rescue
-    raise "SQL statement failed: #{sql_str}"
-  end
+  system(sql_str)
 
   (1..47).each do |i|
     t = "#{dataset}_%02d" % i
@@ -397,16 +391,15 @@ def query_census(client, chunk, rec_offset, file, col_desc_h)
       next if key =~ /FILEID|STUSAB|CHARITER|CIFSN/      # Repeated for every table from wildcard select
       
       if key =~ /state|county|zcta|LOGRECNO/
-        h[key] = value
-        # file.print h.to_json
+        h[key] = value if key == "zcta5"
       elsif d = json_headers(col_desc_h, key)
-        h[key] = { 
-          d: d,
-          value: value
-        }
-        file.print h.to_json + "\n"
+        h.merge! d
+        h[:key] = key
+        h[:value] = value
       end
     end
+    
+    file.print h.to_json + "\n"
   end
 end
 
