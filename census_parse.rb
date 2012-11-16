@@ -334,9 +334,9 @@ def json_headers(col_desc_h, key)
   
   table = key[0...-3].gsub(/([A-Za-z]+)0+([1-9]+)/, '\1\2')
 
-  puts "table: #{table}"
-  puts "col_desc_h[table]: #{col_desc_h[table]}"
-  puts "key: #{key}"
+  # puts "table: #{table}"
+  # puts "col_desc_h[table]: #{col_desc_h[table]}"
+  # puts "key: #{key}"
   
   if col_desc_h[table]
     hz[:table] = table
