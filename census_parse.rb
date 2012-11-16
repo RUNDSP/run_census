@@ -333,7 +333,7 @@ def json_headers(col_desc_h, key)
   # puts "key: #{key}"
   
   if col_desc_h[table]
-    hz[:table] = table
+    # hz[:table] = table
     hz[:name] = col_desc_h[table]["name"]
     hz[:universe] = col_desc_h[table]["universe"]
     hz[:text] = col_desc_h[table]["labels"][key]["text"]
