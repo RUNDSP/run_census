@@ -16,6 +16,8 @@ require 'open-uri'
 require 'rubygems'
 require 'zip/zip'
 require 'zip/zipfilesystem'
+require 'moped'
+require 'yaml'
 
 # ---------------------------------------------------------------------------------------------------------
 #
@@ -41,6 +43,8 @@ require 'zip/zipfilesystem'
 #
 # ---------------------------------------------------------------------------------------------------------
 
+US_STATES = YAML.load_file "constants/us_states.yml"
+
 ENCODING    = 'latin-1'                          # Government source data is latin-1. 
 TOTSEGS     = 48                                 # 
 TOTTABLES   = 331                                # 
@@ -57,59 +61,49 @@ SQLHOST      = 'localhost'
 SQLUSER     = 'root'
 SQLPASSWORD = ''
 SQLDATABASE = 'rcensus'
-SQLCHUNK    = 5000
+SQLCHUNK    = 1000
 
 #uri1     = 'ftp://ftp.census.gov/census_2010/04-Summary_File_1/Montana/mt2010.sf1.zip'
 uri1    = 'ftp://ftp.census.gov/census_2010/04-Summary_File_1/National/us2010.sf1.zip'
 uri2    = 'ftp://ftp.census.gov/census_2010/04-Summary_File_1/Urban_Rural_Update/National/us2010.ur1.zip'
 
+$moped = Moped::Session.new([ "127.0.0.1:27017" ])
+$moped.use "run_census"
+collection = $moped[:census_2010]
+collection.drop
+collection.indexes.create({ zcta5: 1 })
+collection.indexes.create({ key: 1, value: -1 })
+collection.indexes.create({ state: 1 })
+collection.indexes.create({ state_ac: 1 }, { sparse: true })
+
 # ---------------------------------------------------------------------------------------------------------
-#
 # Download ZIP file from Census website and uncompress in current directory
-#
 # ---------------------------------------------------------------------------------------------------------
 def download_zip(uri,working_dir)
-    begin
-    source = open(uri)       
-      begin
-        cf = File.open(source)
-        file_cnt = 0
-        Zip::ZipFile.open(cf) do |zipfile|
-          zipfile.each do |file|
-            puts "uncompressing #{file}"  # this works
-            zipfile.extract(file, "#{working_dir}/#{file.name}") unless File.exist?("#{working_dir}/#{file.name}")
-            file_cnt += 1
-          end
-           
-          end
-          if file_cnt != (TOTSEGS + 1)
-            puts "Error - expecting #{TOTSEGS} files - received #{file_cnt}"
-            puts "Rerun script"
-            exit
-          end
-
-        rescue StandardError=>e
-          puts "Error: status code #{e}"  
-        end
-    rescue StandardError=>e
-      puts "Error: status code #{e}"  
+  source = open(uri)       
+  cf = File.open(source)
+  file_cnt = 0
+  Zip::ZipFile.open(cf) do |zipfile|
+    zipfile.each do |file|
+      zipfile.extract(file, "#{working_dir}/#{file.name}") unless File.exist?("#{working_dir}/#{file.name}")
+      file_cnt += 1
     end
+  end
+
+  if file_cnt != (TOTSEGS + 1)
+    raise "Error - expecting #{TOTSEGS} files - received #{file_cnt}"
+  end
 end
 
 # ---------------------------------------------------------------------------------------------------------
 # Create tables as needed
 #   1) ruby mysql2 should work but means rewriting 9000 SQL lines
 #   2) system call to mysql
-#
 # ---------------------------------------------------------------------------------------------------------
 def create_census_tables(host,user,password,database,sqlscripts)
   sql_str = "#{MYSQLBIN_D}/mysql -h #{host} -u #{user} --password=#{password} -D #{database} < #{sqlscripts}/create_all_sf1.sql"
   puts sql_str
-  begin
-    system(sql_str)
-  rescue
-    puts "SQL statement failed: #{sql_str}"
-  end
+  system(sql_str)
 end
 
 #
@@ -146,26 +140,25 @@ def preprocess_tables(work_dir, dataset)
   puts "records between #{rec_min} and #{rec_max}"
 
   (1..47).each do |i|  
-    fo = work_dir + "/us000%02d" %  i + "2010.cs1"
-    fcsv = File.open(work_dir + "/us000%02d" %  i + "2010.csv","w")
+    fo = File.join work_dir, "/us000%02d2010.cs1" % i
+    fcsv = File.open(work_dir + "/us000%02d2010.csv" % i,"w")
     fi = work_dir + "/us000%02d" %  i + "2010.#{dataset}"    
 
-    next if File.size?(fi)
+    next if File.size?( fi )
     puts "Filtering file #{fi}"
 
     `/usr/bin/awk \'/#{rec_min}/, /#{rec_max}/\' #{fi} > #{fo}`
-    #
-    # Filter for exact LOGRECNO match only
-    #
 
-    #csv_array = CSV.read(fo)             # read whole file into memory
-    #csv_array.each do |inrow|
-    #  thisRecno = inrow[4]               # Make sure this is a string
+    # Filter for exact LOGRECNO match only
+
+    # csv_array = CSV.read(fo)             # read whole file into memory
+    # csv_array.each do |inrow|
+    # thisRecno = inrow[4]               # Make sure this is a string
 
     #  if zcta_logrecno.include?(thisRecno)  # Really slow, faster to import and join in SQL
     #    fcsv.puts inrow.join(',')
     #  end
-    end                                       # filter_tables definitions 
+  end
 end
 
 # ---------------------------------------------------------------------------------------------------------
@@ -351,7 +344,6 @@ end
 # ---------------------------------------------------------------------------------------------------------
 
 def query_census(client, chunk, rec_offset, file, col_desc_h)
-
   qstr1 = "SELECT  g.state, g.county, g.zcta5, "
   qstr2 = "FROM geo2010 g "
      
@@ -384,22 +376,36 @@ def query_census(client, chunk, rec_offset, file, col_desc_h)
   # 
 
   puts "Writing JSON with records"
-  results.each(:as => hash, :cache_rows => false) do |row|
-    h = {}
+  $moped.with(safe: true) do |db|
+    results.each(:as => hash, :cache_rows => false) do |row|
+      h = {}
     
-    for (key, value) in row do
-      next if key =~ /FILEID|STUSAB|CHARITER|CIFSN/      # Repeated for every table from wildcard select
+      for (key, value) in row do
+        next if key =~ /FILEID|STUSAB|CHARITER|CIFSN/      # Repeated for every table from wildcard select
       
-      if key =~ /state|county|zcta|LOGRECNO/
-        h[key] = value if key == "zcta5"
-      elsif d = json_headers(col_desc_h, key)
-        h.merge! d
-        h[:key] = key
-        h[:value] = value
+        if key =~ /state|county|zcta|LOGRECNO/
+          if key == "zcta5"
+            h[key] = value
+          elsif key == "state"
+            h[key] = value
+
+            if state_ac = US_STATES[value]
+              h["state_ac"] = state_ac
+            end
+            
+          end
+        elsif d = json_headers(col_desc_h, key)
+          h.merge! d
+          h[:key] = key
+          h[:value] = value
+          
+          puts h
+          
+          db[:census_2010].insert h          
+          # file.print h.to_json + "\n"
+        end
       end
     end
-    
-    file.print h.to_json + "\n"
   end
 end
 
